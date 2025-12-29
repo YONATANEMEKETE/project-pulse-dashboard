@@ -1,10 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, Calendar, Users, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Plus, MoreVertical, Calendar, Users, Loader2, X } from 'lucide-react';
 import { createProject, fetchAllprojects } from '@/lib/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { projectType } from '@/types/types';
 import { useState } from 'react';
 import CreateProjectModal from '@/components/CreateProjectModal';
 
@@ -22,15 +30,29 @@ const priorityColors = {
 
 export default function Projects() {
   const queryClient = useQueryClient();
+  const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
+
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [priorityFilter, setPriorityFilter] = useState<string>('');
+  const [searchFilter, setSearchFilter] = useState<string>('');
+
   const {
     data: projects,
     isPending,
     isError,
     error,
   } = useQuery({
-    queryKey: ['projects'],
-    queryFn: () => fetchAllprojects(),
+    queryKey: ['projects', statusFilter, priorityFilter, searchFilter],
+    queryFn: () =>
+      fetchAllprojects({
+        status: statusFilter as 'In Progress' | 'Planning' | 'Review',
+        priority: priorityFilter as 'High' | 'Medium' | 'Low',
+        search: searchFilter,
+        sortBy: '',
+        sortOrder: 'Asc',
+      }),
   });
+
   const mutation = useMutation({
     mutationFn: createProject,
     onSuccess: () => {
@@ -39,9 +61,18 @@ export default function Projects() {
     },
   });
 
-  const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
+  const clearFilters = () => {
+    setStatusFilter('');
+    setPriorityFilter('');
+    setSearchFilter('');
+  };
 
-  // console.log('projects', projects);
+  const removeFilter = (filterType: string) => {
+    if (filterType === 'status') setStatusFilter('');
+    if (filterType === 'priority') setPriorityFilter('');
+    if (filterType === 'search') setSearchFilter('');
+  };
+
   return (
     <div className="space-y-6 flex flex-col">
       <div className="flex items-center justify-between">
@@ -56,6 +87,80 @@ export default function Projects() {
           New Project
         </Button>
       </div>
+
+      <div className="flex flex-wrap gap-4 items-end">
+        <div className="space-y-2">
+          <Label htmlFor="status-filter">Status</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Planning">Planning</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Review">Review</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="priority-filter">Priority</Label>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="filter by priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Low">Low</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="search-filter">Search</Label>
+          <Input
+            id="search-filter"
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+            placeholder="Search by name or description"
+            className="w-64"
+          />
+        </div>
+        <Button variant="outline" onClick={clearFilters}>
+          Clear Filters
+        </Button>
+      </div>
+
+      {(statusFilter || priorityFilter || searchFilter) && (
+        <div className="flex flex-wrap gap-2">
+          {statusFilter && (
+            <Badge variant="secondary" className="gap-1">
+              Status: {statusFilter}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => removeFilter('status')}
+              />
+            </Badge>
+          )}
+          {priorityFilter && (
+            <Badge variant="secondary" className="gap-1">
+              Priority: {priorityFilter}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => removeFilter('priority')}
+              />
+            </Badge>
+          )}
+          {searchFilter && (
+            <Badge variant="secondary" className="gap-1">
+              Search: {searchFilter}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => removeFilter('search')}
+              />
+            </Badge>
+          )}
+        </div>
+      )}
 
       {/* Loading State */}
       {isPending && (
