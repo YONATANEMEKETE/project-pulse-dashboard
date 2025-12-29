@@ -1,93 +1,23 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Mail, MoreVertical } from "lucide-react";
-
-const teamMembers = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    role: "Product Manager",
-    email: "sarah.j@company.com",
-    initials: "SJ",
-    projects: 8,
-    status: "Active",
-    avatar: "bg-primary",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    role: "Lead Developer",
-    email: "michael.c@company.com",
-    initials: "MC",
-    projects: 12,
-    status: "Active",
-    avatar: "bg-accent",
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    role: "UX Designer",
-    email: "emily.r@company.com",
-    initials: "ER",
-    projects: 6,
-    status: "Active",
-    avatar: "bg-green-600",
-  },
-  {
-    id: 4,
-    name: "David Kim",
-    role: "Backend Developer",
-    email: "david.k@company.com",
-    initials: "DK",
-    projects: 10,
-    status: "Active",
-    avatar: "bg-orange-600",
-  },
-  {
-    id: 5,
-    name: "Lisa Anderson",
-    role: "QA Engineer",
-    email: "lisa.a@company.com",
-    initials: "LA",
-    projects: 9,
-    status: "Active",
-    avatar: "bg-purple-600",
-  },
-  {
-    id: 6,
-    name: "James Wilson",
-    role: "Frontend Developer",
-    email: "james.w@company.com",
-    initials: "JW",
-    projects: 7,
-    status: "Active",
-    avatar: "bg-blue-600",
-  },
-  {
-    id: 7,
-    name: "Maria Garcia",
-    role: "Product Designer",
-    email: "maria.g@company.com",
-    initials: "MG",
-    projects: 5,
-    status: "Active",
-    avatar: "bg-pink-600",
-  },
-  {
-    id: 8,
-    name: "Thomas Brown",
-    role: "DevOps Engineer",
-    email: "thomas.b@company.com",
-    initials: "TB",
-    projects: 11,
-    status: "Active",
-    avatar: "bg-indigo-600",
-  },
-];
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Loader2, Mail, MoreVertical } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAllTeams } from '@/lib/api';
+import { TeamType } from '@/types/types';
 
 export default function Team() {
+  const {
+    data: teamMembers,
+    isPending,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => fetchAllTeams(),
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -103,9 +33,30 @@ export default function Team() {
         </Button>
       </div>
 
+      {/* Loading State */}
+      {isPending && (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="mt-2 text-muted-foreground">Loading team members...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {isError && (
+        <div className="p-4 border border-red-200 bg-red-50 text-red-700 rounded-lg">
+          <p className="font-semibold">Error loading team members:</p>
+          <p>
+            {error instanceof Error ? error.message : 'Unknown error occurred'}
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {teamMembers.map((member) => (
-          <Card key={member.id} className="shadow-sm hover:shadow-md transition-all">
+        {teamMembers.map((member: TeamType) => (
+          <Card
+            key={member.id}
+            className="shadow-sm hover:shadow-md transition-all"
+          >
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
                 <Avatar className={`h-14 w-14 ${member.avatar}`}>
@@ -138,7 +89,10 @@ export default function Team() {
                       {member.projects}
                     </span>
                   </div>
-                  <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                  <Badge
+                    variant="outline"
+                    className="bg-green-100 text-green-700 border-green-200"
+                  >
                     {member.status}
                   </Badge>
                 </div>
@@ -147,6 +101,13 @@ export default function Team() {
           </Card>
         ))}
       </div>
+
+      {/* Empty State */}
+      {!isPending && teamMembers?.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-xl">
+          No projects found matching your filters.
+        </div>
+      )}
     </div>
   );
 }
