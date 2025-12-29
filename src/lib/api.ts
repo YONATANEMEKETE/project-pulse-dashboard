@@ -22,7 +22,7 @@ export const fetchAllprojects = async (params?: projectsParams) => {
   const queryString = new URLSearchParams(params as any).toString();
 
   const response = await fetch(
-    `http://localhost:3001/api/projects?${queryString}`
+    `http://localhost:3001/api/projets?${queryString}`
   );
 
   if (!response.ok) {

@@ -16,6 +16,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import CreateProjectModal from '@/components/CreateProjectModal';
 import LoadingSkeletonCard from '@/components/ProjectSkeleton';
+import { projectType } from '@/types/types';
 
 const statusColors = {
   'In Progress': 'bg-primary/10 text-primary border-primary/20',
@@ -42,6 +43,7 @@ export default function Projects() {
     isPending,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ['projects', statusFilter, priorityFilter, searchFilter],
     queryFn: () =>
@@ -172,16 +174,21 @@ export default function Projects() {
       )}
 
       {isError && (
-        <div className="p-4 border border-red-200 bg-red-50 text-red-700 rounded-lg">
-          <p className="font-semibold">Error loading projects:</p>
-          <p>
-            {error instanceof Error ? error.message : 'Unknown error occurred'}
-          </p>
+        <div className="p-4 border border-red-200 bg-red-50 text-red-700 rounded-lg text-center space-y-10">
+          <div>
+            <p className="font-semibold">Error loading projects:</p>
+            <p>
+              {error instanceof Error
+                ? error.message
+                : 'Unknown error occurred'}
+            </p>
+          </div>
+          <Button onClick={() => refetch()}>Refetch</Button>
         </div>
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {projects?.map((project: any) => (
+        {projects?.map((project: projectType) => (
           <Card
             key={project.id}
             className="shadow-sm hover:shadow-md transition-all"
