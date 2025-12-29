@@ -15,6 +15,7 @@ import { createProject, fetchAllprojects } from '@/lib/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import CreateProjectModal from '@/components/CreateProjectModal';
+import LoadingSkeletonCard from '@/components/ProjectSkeleton';
 
 const statusColors = {
   'In Progress': 'bg-primary/10 text-primary border-primary/20',
@@ -163,9 +164,10 @@ export default function Projects() {
       )}
 
       {isPending && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="mt-2 text-muted-foreground">Loading projects...</p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <LoadingSkeletonCard key={index} />
+          ))}
         </div>
       )}
 

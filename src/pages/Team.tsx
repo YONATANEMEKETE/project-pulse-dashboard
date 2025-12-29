@@ -10,6 +10,7 @@ import { fetchAllTeams, createTeamMember } from '@/lib/api';
 import { TeamType } from '@/types/types';
 import { useState, useMemo } from 'react';
 import CreateTeammemberModal from '@/components/CreateTeammemberModal';
+import LoadingSkeletonCard from '@/components/ProjectSkeleton';
 
 export default function Team() {
   const queryClient = useQueryClient();
@@ -92,9 +93,10 @@ export default function Team() {
       </div>
 
       {isPending && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="mt-2 text-muted-foreground">Loading team members...</p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <LoadingSkeletonCard key={index} />
+          ))}
         </div>
       )}
 
