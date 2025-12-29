@@ -2,12 +2,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mail, MoreVertical } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2, Mail, MoreVertical, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAllTeams } from '@/lib/api';
 import { TeamType } from '@/types/types';
+import { useState, useMemo } from 'react';
 
 export default function Team() {
+  const [searchTerm, setSearchTerm] = useState('');
+
   const {
     data: teamMembers,
     isPending,
@@ -18,13 +23,24 @@ export default function Team() {
     queryFn: () => fetchAllTeams(),
   });
 
+  const filteredMembers = useMemo(() => {
+    if (!teamMembers) return [];
+    if (!searchTerm) return teamMembers;
+    return teamMembers.filter(
+      (member: TeamType) =>
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [teamMembers, searchTerm]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Team</h1>
           <p className="text-muted-foreground mt-2">
-            {teamMembers?.length || 0} members in your team
+            {filteredMembers?.length || 0} members in your team
           </p>
         </div>
         <Button className="gap-2">
@@ -33,7 +49,20 @@ export default function Team() {
         </Button>
       </div>
 
-      {/* Loading State */}
+      {/* Step 2: Add search input at the top */}
+      <div className="space-y-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="search-team"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name, email, or role"
+            className="pl-10 w-80"
+          />
+        </div>
+      </div>
+
       {isPending && (
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -41,7 +70,6 @@ export default function Team() {
         </div>
       )}
 
-      {/* Error State */}
       {isError && (
         <div className="p-4 border border-red-200 bg-red-50 text-red-700 rounded-lg">
           <p className="font-semibold">Error loading team members:</p>
@@ -52,7 +80,7 @@ export default function Team() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {teamMembers?.map((member: TeamType) => (
+        {filteredMembers?.map((member: TeamType) => (
           <Card
             key={member.id}
             className="shadow-sm hover:shadow-md transition-all"
@@ -102,10 +130,11 @@ export default function Team() {
         ))}
       </div>
 
-      {/* Empty State */}
-      {!isPending && teamMembers?.length === 0 && (
+      {!isPending && filteredMembers?.length === 0 && (
         <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-xl">
-          No projects found matching your filters.
+          {searchTerm
+            ? 'No team members found matching your search.'
+            : 'No team members found.'}
         </div>
       )}
     </div>

@@ -162,7 +162,6 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Loading State */}
       {isPending && (
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -170,7 +169,6 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Error State */}
       {isError && (
         <div className="p-4 border border-red-200 bg-red-50 text-red-700 rounded-lg">
           <p className="font-semibold">Error loading projects:</p>
@@ -253,7 +251,6 @@ export default function Projects() {
         ))}
       </div>
 
-      {/* Empty State */}
       {!isPending && projects?.length === 0 && (
         <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-xl">
           No projects found matching your filters.
