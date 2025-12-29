@@ -1,4 +1,4 @@
-import { projectType } from '@/types/types';
+import { projectType, TeamType } from '@/types/types';
 
 interface projectsParams {
   status: 'In Progress' | 'Planning' | 'Review';
@@ -43,6 +43,7 @@ export const createProject = async (newProject: projectType) => {
   return response.json();
 };
 
+// todo team functions
 export const fetchAllTeams = async (params?: teamParams) => {
   const query = new URLSearchParams(params as any).toString();
 
@@ -52,5 +53,18 @@ export const fetchAllTeams = async (params?: teamParams) => {
     throw new Error(`Failed to fetch teams: ${response.statusText}`);
   }
 
+  return response.json();
+};
+
+export const createTeamMember = async (
+  newMember: Omit<TeamType, 'id' | 'initials' | 'projects'>
+) => {
+  const response = await fetch('http://localhost:3001/api/team', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newMember),
+  });
+
+  if (!response.ok) throw new Error('Failed to create team member');
   return response.json();
 };

@@ -5,13 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Mail, MoreVertical, Search } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchAllTeams } from '@/lib/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchAllTeams, createTeamMember } from '@/lib/api';
 import { TeamType } from '@/types/types';
 import { useState, useMemo } from 'react';
+import CreateTeammemberModal from '@/components/CreateTeammemberModal';
 
 export default function Team() {
+  const queryClient = useQueryClient();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [feedback, setFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const {
     data: teamMembers,
@@ -34,6 +41,27 @@ export default function Team() {
     );
   }, [teamMembers, searchTerm]);
 
+  const mutation = useMutation({
+    mutationFn: createTeamMember,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      setIsCreateOpen(false);
+      setFeedback({
+        type: 'success',
+        message: 'Team member invited successfully!',
+      });
+      setTimeout(() => setFeedback(null), 3000);
+    },
+    onError: (error) => {
+      setFeedback({
+        type: 'error',
+        message:
+          error instanceof Error ? error.message : 'Failed to invite member',
+      });
+      setTimeout(() => setFeedback(null), 3000);
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -43,7 +71,7 @@ export default function Team() {
             {filteredMembers?.length || 0} members in your team
           </p>
         </div>
-        <Button className="gap-2">
+        <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
           <Mail className="h-4 w-4" />
           Invite Member
         </Button>
@@ -76,6 +104,19 @@ export default function Team() {
           <p>
             {error instanceof Error ? error.message : 'Unknown error occurred'}
           </p>
+        </div>
+      )}
+
+      {/* Feedback Toast */}
+      {feedback && (
+        <div
+          className={`p-4 border rounded-lg ${
+            feedback.type === 'success'
+              ? 'bg-green-50 border-green-200 text-green-700'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {feedback.message}
         </div>
       )}
 
@@ -137,6 +178,13 @@ export default function Team() {
             : 'No team members found.'}
         </div>
       )}
+
+      <CreateTeammemberModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={(newMember) => mutation.mutate(newMember)}
+        isSubmitting={mutation.isPending}
+      />
     </div>
   );
 }
