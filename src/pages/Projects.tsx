@@ -2,9 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, MoreVertical, Calendar, Users, Loader2 } from 'lucide-react';
-import { fetchAllprojects } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { createProject, fetchAllprojects } from '@/lib/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { projectType } from '@/types/types';
+import { useState } from 'react';
+import CreateProjectModal from '@/components/CreateProjectModal';
 
 const statusColors = {
   'In Progress': 'bg-primary/10 text-primary border-primary/20',
@@ -19,6 +21,7 @@ const priorityColors = {
 };
 
 export default function Projects() {
+  const queryClient = useQueryClient();
   const {
     data: projects,
     isPending,
@@ -28,6 +31,15 @@ export default function Projects() {
     queryKey: ['projects'],
     queryFn: () => fetchAllprojects(),
   });
+  const mutation = useMutation({
+    mutationFn: createProject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setIsCreateOpen(false);
+    },
+  });
+
+  const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
 
   // console.log('projects', projects);
   return (
@@ -39,7 +51,7 @@ export default function Projects() {
             Manage and track all your team projects
           </p>
         </div>
-        <Button className="gap-2">
+        <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
           New Project
         </Button>
@@ -142,6 +154,13 @@ export default function Projects() {
           No projects found matching your filters.
         </div>
       )}
+
+      <CreateProjectModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={(newProject) => mutation.mutate(newProject)}
+        isSubmitting={mutation.isPending}
+      />
     </div>
   );
 }

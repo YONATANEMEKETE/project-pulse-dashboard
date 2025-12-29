@@ -1,3 +1,5 @@
+import { projectType } from '@/types/types';
+
 interface projectsParams {
   status: 'In Progress' | 'Planning' | 'Review';
   priority: 'High' | 'Medium' | 'Low';
@@ -14,6 +16,8 @@ interface teamParams {
   sortOrder: 'Asc' | 'Dsc';
 }
 
+// todo project functions
+
 export const fetchAllprojects = async (params?: projectsParams) => {
   const queryString = new URLSearchParams(params as any).toString();
 
@@ -25,6 +29,17 @@ export const fetchAllprojects = async (params?: projectsParams) => {
     throw new Error(`Failed to fetch projects: ${response.statusText}`);
   }
 
+  return response.json();
+};
+
+export const createProject = async (newProject: projectType) => {
+  const response = await fetch('http://localhost:3001/api/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newProject),
+  });
+
+  if (!response.ok) throw new Error('Failed to create project');
   return response.json();
 };
 

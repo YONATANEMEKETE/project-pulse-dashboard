@@ -24,7 +24,7 @@ export default function Team() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Team</h1>
           <p className="text-muted-foreground mt-2">
-            {teamMembers.length} members in your team
+            {teamMembers?.length || 0} members in your team
           </p>
         </div>
         <Button className="gap-2">
@@ -52,7 +52,7 @@ export default function Team() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {teamMembers.map((member: TeamType) => (
+        {teamMembers?.map((member: TeamType) => (
           <Card
             key={member.id}
             className="shadow-sm hover:shadow-md transition-all"
